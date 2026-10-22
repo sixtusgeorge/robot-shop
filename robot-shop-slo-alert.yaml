@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: robot-shop-slo-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus-stack
+spec:
+  groups:
+  - name: RobotShopSLO
+    rules:
+    - alert: CatalogueHighErrorRate
+      expr: |
+        sum(rate(http_requests_total{job="catalogue",status=~"5.."}[5m])) 
+        / 
+        sum(rate(http_requests_total{job="catalogue"}[5m])) > 0.01
+      for: 2m
+      labels:
+        severity: critical
+        team: devops
+      annotations:
+        summary: "Catalogue service error rate exceeds SLO threshold"
+        description: "The error rate for the catalogue service is above 1% for the last 2 minutes, burning the error budget rapidly."
+        runbook_url: "https://github.com/your-username/robot-shop/blob/main/runbooks/catalogue-failures.md"
